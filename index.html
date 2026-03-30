@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weight Loss Journey</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f0f0f;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 24px 16px;
+        }
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            color: #fff;
+        }
+        h1 span { color: #6c63ff; }
+
+        /* Stats Cards */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+        .stat-card .label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #888;
+            margin-bottom: 4px;
+        }
+        .stat-card .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
+        }
+        .stat-card .value.positive { color: #ff6b6b; }
+        .stat-card .value.negative { color: #51cf66; }
+
+        /* Input Form */
+        .input-section {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            display: flex;
+            gap: 12px;
+            align-items: end;
+            flex-wrap: wrap;
+        }
+        .field { display: flex; flex-direction: column; gap: 4px; }
+        .field label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #888;
+        }
+        .field input {
+            background: #16213e;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            width: 160px;
+        }
+        .field input:focus { border-color: #6c63ff; }
+        button {
+            background: #6c63ff;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover { background: #5a52d5; }
+
+        /* Chart */
+        .chart-container {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        .chart-container canvas { width: 100% !important; }
+
+        /* Log Table */
+        .log-section {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .log-section h2 {
+            font-size: 1rem;
+            margin-bottom: 12px;
+            color: #aaa;
+        }
+        .log-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .log-table th {
+            text-align: left;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #666;
+            padding: 8px 12px;
+            border-bottom: 1px solid #333;
+        }
+        .log-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #1f1f3a;
+            font-size: 0.9rem;
+        }
+        .log-table .change.positive { color: #ff6b6b; }
+        .log-table .change.negative { color: #51cf66; }
+        .log-table .change.neutral { color: #888; }
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #555;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .delete-btn:hover { color: #ff6b6b; background: rgba(255,107,107,0.1); }
+        .empty-state {
+            text-align: center;
+            color: #555;
+            padding: 40px;
+            font-size: 0.95rem;
+        }
+
+        /* Goal Section */
+        .goal-section {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .goal-section label { color: #888; font-size: 0.85rem; }
+        .goal-section input {
+            background: #16213e;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: #fff;
+            font-size: 0.95rem;
+            outline: none;
+            width: 100px;
+        }
+        .goal-section input:focus { border-color: #6c63ff; }
+        .goal-section .goal-btn {
+            background: #333;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+        }
+        .progress-bar-container {
+            flex: 1;
+            min-width: 200px;
+            background: #16213e;
+            border-radius: 8px;
+            height: 24px;
+            overflow: hidden;
+            position: relative;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #6c63ff, #51cf66);
+            border-radius: 8px;
+            transition: width 0.5s ease;
+        }
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>My <span>Weight Loss</span> Journey</h1>
+
+        <!-- Stats -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="label">Starting</div>
+                <div class="value" id="stat-start">—</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Current</div>
+                <div class="value" id="stat-current">—</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Total Lost</div>
+                <div class="value" id="stat-lost">—</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">7-Day Avg</div>
+                <div class="value" id="stat-avg">—</div>
+            </div>
+        </div>
+
+        <!-- Goal -->
+        <div class="goal-section">
+            <label>Goal Weight:</label>
+            <input type="number" id="goal-input" step="0.1" placeholder="lbs">
+            <button class="goal-btn" onclick="setGoal()">Set</button>
+            <div class="progress-bar-container" id="progress-container" style="display:none">
+                <div class="progress-bar" id="progress-bar"></div>
+                <div class="progress-text" id="progress-text"></div>
+            </div>
+        </div>
+
+        <!-- Input -->
+        <div class="input-section">
+            <div class="field">
+                <label>Date</label>
+                <input type="date" id="date-input">
+            </div>
+            <div class="field">
+                <label>Weight (lbs)</label>
+                <input type="number" id="weight-input" step="0.1" placeholder="e.g. 185.5">
+            </div>
+            <button onclick="addEntry()">Log Weight</button>
+        </div>
+
+        <!-- Chart -->
+        <div class="chart-container">
+            <canvas id="weight-chart" height="300"></canvas>
+        </div>
+
+        <!-- Log -->
+        <div class="log-section">
+            <h2>Daily Log</h2>
+            <div id="log-content"></div>
+        </div>
+    </div>
+
+    <script>
+        // Data
+        function getData() {
+            return JSON.parse(localStorage.getItem('weightData') || '[]');
+        }
+        function saveData(data) {
+            localStorage.setItem('weightData', JSON.stringify(data));
+        }
+        function getGoal() {
+            return parseFloat(localStorage.getItem('weightGoal')) || null;
+        }
+
+        // Init date input to today
+        document.getElementById('date-input').value = new Date().toISOString().split('T')[0];
+
+        // Add entry
+        function addEntry() {
+            const dateInput = document.getElementById('date-input');
+            const weightInput = document.getElementById('weight-input');
+            const date = dateInput.value;
+            const weight = parseFloat(weightInput.value);
+
+            if (!date || isNaN(weight) || weight <= 0) return;
+
+            const data = getData();
+            const existing = data.findIndex(d => d.date === date);
+            if (existing >= 0) {
+                data[existing].weight = weight;
+            } else {
+                data.push({ date, weight });
+            }
+            data.sort((a, b) => a.date.localeCompare(b.date));
+            saveData(data);
+
+            weightInput.value = '';
+            render();
+        }
+
+        // Delete entry
+        function deleteEntry(date) {
+            const data = getData().filter(d => d.date !== date);
+            saveData(data);
+            render();
+        }
+
+        // Set goal
+        function setGoal() {
+            const val = parseFloat(document.getElementById('goal-input').value);
+            if (isNaN(val) || val <= 0) return;
+            localStorage.setItem('weightGoal', val);
+            render();
+        }
+
+        // Chart
+        let chart = null;
+        function renderChart(data) {
+            const ctx = document.getElementById('weight-chart').getContext('2d');
+            const goal = getGoal();
+
+            const chartData = {
+                datasets: [{
+                    label: 'Weight (lbs)',
+                    data: data.map(d => ({ x: d.date, y: d.weight })),
+                    borderColor: '#6c63ff',
+                    backgroundColor: 'rgba(108, 99, 255, 0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#6c63ff',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 1,
+                }]
+            };
+
+            if (goal && data.length > 0) {
+                chartData.datasets.push({
+                    label: 'Goal',
+                    data: [
+                        { x: data[0].date, y: goal },
+                        { x: data[data.length - 1].date, y: goal }
+                    ],
+                    borderColor: '#51cf66',
+                    borderDash: [6, 4],
+                    pointRadius: 0,
+                    fill: false,
+                });
+            }
+
+            if (chart) chart.destroy();
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: { unit: 'day', tooltipFormat: 'MMM d, yyyy' },
+                            grid: { color: '#222' },
+                            ticks: { color: '#666' }
+                        },
+                        y: {
+                            grid: { color: '#222' },
+                            ticks: { color: '#666' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1a1a2e',
+                            titleColor: '#fff',
+                            bodyColor: '#ccc',
+                            borderColor: '#333',
+                            borderWidth: 1,
+                        }
+                    }
+                }
+            });
+        }
+
+        // Stats
+        function renderStats(data) {
+            const startEl = document.getElementById('stat-start');
+            const currentEl = document.getElementById('stat-current');
+            const lostEl = document.getElementById('stat-lost');
+            const avgEl = document.getElementById('stat-avg');
+
+            if (data.length === 0) {
+                startEl.textContent = '—';
+                currentEl.textContent = '—';
+                lostEl.textContent = '—';
+                avgEl.textContent = '—';
+                return;
+            }
+
+            const start = data[0].weight;
+            const current = data[data.length - 1].weight;
+            const lost = current - start;
+
+            startEl.textContent = start.toFixed(1);
+            currentEl.textContent = current.toFixed(1);
+
+            lostEl.textContent = (lost > 0 ? '+' : '') + lost.toFixed(1);
+            lostEl.className = 'value ' + (lost > 0 ? 'positive' : lost < 0 ? 'negative' : '');
+
+            // 7-day avg
+            const last7 = data.slice(-7);
+            const avg = last7.reduce((s, d) => s + d.weight, 0) / last7.length;
+            avgEl.textContent = avg.toFixed(1);
+        }
+
+        // Goal progress
+        function renderGoal(data) {
+            const goal = getGoal();
+            const container = document.getElementById('progress-container');
+            const input = document.getElementById('goal-input');
+
+            if (goal) input.value = goal;
+            if (!goal || data.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+
+            container.style.display = 'block';
+            const start = data[0].weight;
+            const current = data[data.length - 1].weight;
+            const totalToLose = start - goal;
+            const actuallyLost = start - current;
+            const pct = totalToLose > 0 ? Math.min(100, Math.max(0, (actuallyLost / totalToLose) * 100)) : 0;
+
+            document.getElementById('progress-bar').style.width = pct + '%';
+            document.getElementById('progress-text').textContent = pct.toFixed(0) + '% to goal';
+        }
+
+        // Log table
+        function renderLog(data) {
+            const container = document.getElementById('log-content');
+            if (data.length === 0) {
+                container.innerHTML = '<div class="empty-state">No entries yet. Log your first weight above!</div>';
+                return;
+            }
+
+            const reversed = [...data].reverse();
+            let html = '<table class="log-table"><thead><tr><th>Date</th><th>Weight</th><th>Change</th><th></th></tr></thead><tbody>';
+
+            reversed.forEach((entry, i) => {
+                const idx = data.length - 1 - i;
+                const prev = idx > 0 ? data[idx - 1].weight : null;
+                const change = prev !== null ? entry.weight - prev : 0;
+                const changeStr = prev === null ? '—' : (change > 0 ? '+' : '') + change.toFixed(1);
+                const changeClass = prev === null ? 'neutral' : (change > 0 ? 'positive' : change < 0 ? 'negative' : 'neutral');
+
+                const dateObj = new Date(entry.date + 'T00:00:00');
+                const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+                html += `<tr>
+                    <td>${dateStr}</td>
+                    <td>${entry.weight.toFixed(1)} lbs</td>
+                    <td class="change ${changeClass}">${changeStr}</td>
+                    <td><button class="delete-btn" onclick="deleteEntry('${entry.date}')" title="Delete">×</button></td>
+                </tr>`;
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // Render all
+        function render() {
+            const data = getData();
+            renderStats(data);
+            renderGoal(data);
+            renderChart(data);
+            renderLog(data);
+        }
+
+        // Enter key to submit
+        document.getElementById('weight-input').addEventListener('keydown', e => {
+            if (e.key === 'Enter') addEntry();
+        });
+
+        render();
+    </script>
+</body>
+</html>
