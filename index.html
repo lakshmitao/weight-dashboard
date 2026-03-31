@@ -473,16 +473,17 @@
             const current = toDisplay(data[data.length - 1].weight);
             const lost = current - start;
 
-            startEl.textContent = start.toFixed(1);
-            currentEl.textContent = current.toFixed(1);
+            const u = ' ' + unitLabel();
+            startEl.textContent = start.toFixed(1) + u;
+            currentEl.textContent = current.toFixed(1) + u;
 
-            lostEl.textContent = (lost > 0 ? '+' : '') + lost.toFixed(1);
+            lostEl.textContent = (lost > 0 ? '+' : '') + lost.toFixed(1) + u;
             lostEl.className = 'value ' + (lost > 0 ? 'positive' : lost < 0 ? 'negative' : '');
 
             // 7-day avg
             const last7 = data.slice(-7);
             const avg = last7.reduce((s, d) => s + toDisplay(d.weight), 0) / last7.length;
-            avgEl.textContent = avg.toFixed(1);
+            avgEl.textContent = avg.toFixed(1) + ' ' + unitLabel();
         }
 
         // Goal progress
