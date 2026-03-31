@@ -261,6 +261,77 @@
             margin-bottom: 24px;
         }
         .header-row h1 { margin-bottom: 0; }
+
+        /* Estimator */
+        .estimator-section {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .estimator-section h3 {
+            font-size: 0.85rem;
+            color: #aaa;
+            margin-bottom: 4px;
+        }
+        .estimator-section .field input,
+        .estimator-section .field select {
+            width: 100%;
+        }
+        .estimator-section select {
+            background: #222;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        .estimator-section select:focus { border-color: #e53935; }
+        .estimate-result {
+            background: #222;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+        .estimate-result .est-date {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #42a5f5;
+        }
+        .estimate-result .est-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #888;
+            margin-bottom: 4px;
+        }
+        .estimate-result .est-detail {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 4px;
+        }
+        .gender-toggle {
+            display: flex;
+            background: #222;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #333;
+        }
+        .gender-toggle button {
+            flex: 1;
+            background: transparent;
+            padding: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 0;
+            color: #888;
+        }
+        .gender-toggle button:hover { background: #333; }
+        .gender-toggle button.active { background: #e53935; color: #fff; }
     </style>
 </head>
 <body>
@@ -324,6 +395,52 @@
                         <div class="progress-text" id="progress-text"></div>
                     </div>
                 </div>
+
+                <!-- Estimator -->
+                <div class="estimator-section">
+                    <h3>Goal Date Estimator</h3>
+                    <div class="gender-toggle">
+                        <button id="btn-male" class="active" onclick="setGender('male')">Male</button>
+                        <button id="btn-female" onclick="setGender('female')">Female</button>
+                    </div>
+                    <div class="field">
+                        <label>Age</label>
+                        <input type="number" id="est-age" placeholder="e.g. 30" onchange="calcEstimate()">
+                    </div>
+                    <div class="field">
+                        <label id="height-label">Height (in)</label>
+                        <input type="number" id="est-height" step="0.1" placeholder="e.g. 70" onchange="calcEstimate()">
+                    </div>
+                    <div class="field">
+                        <label id="est-weight-label">Current Weight (lbs)</label>
+                        <input type="number" id="est-weight" step="0.1" placeholder="e.g. 188" onchange="calcEstimate()">
+                    </div>
+                    <div class="field">
+                        <label>Activity Level</label>
+                        <select id="est-activity" onchange="calcEstimate()">
+                            <option value="1.2">Sedentary (desk job)</option>
+                            <option value="1.375">Light (1-3 days/wk)</option>
+                            <option value="1.55" selected>Moderate (3-5 days/wk)</option>
+                            <option value="1.725">Active (6-7 days/wk)</option>
+                            <option value="1.9">Very Active (2x/day)</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Deficit (cal/day)</label>
+                        <select id="est-deficit" onchange="calcEstimate()">
+                            <option value="250">Slow (250 cal)</option>
+                            <option value="500" selected>Moderate (500 cal)</option>
+                            <option value="750">Aggressive (750 cal)</option>
+                            <option value="1000">Very Aggressive (1000 cal)</option>
+                        </select>
+                    </div>
+                    <button onclick="calcEstimate()">Estimate</button>
+                    <div class="estimate-result" id="est-result" style="display:none">
+                        <div class="est-label">Estimated Goal Date</div>
+                        <div class="est-date" id="est-date">—</div>
+                        <div class="est-detail" id="est-detail"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -348,6 +465,9 @@
             document.getElementById('weight-label').textContent = 'Weight (' + unit + ')';
             document.getElementById('weight-input').placeholder = unit === 'lbs' ? 'e.g. 185.5' : 'e.g. 84.0';
             document.getElementById('goal-input').placeholder = unit;
+            document.getElementById('height-label').textContent = unit === 'kg' ? 'Height (cm)' : 'Height (in)';
+            document.getElementById('est-weight-label').textContent = 'Current Weight (' + unit + ')';
+            document.getElementById('est-height').placeholder = unit === 'kg' ? 'e.g. 178' : 'e.g. 70';
             render();
         }
 
@@ -606,6 +726,92 @@
             container.innerHTML = html;
         }
 
+        // Estimator
+        let estGender = localStorage.getItem('estGender') || 'male';
+        function setGender(g) {
+            estGender = g;
+            localStorage.setItem('estGender', g);
+            document.getElementById('btn-male').className = g === 'male' ? 'active' : '';
+            document.getElementById('btn-female').className = g === 'female' ? 'active' : '';
+            calcEstimate();
+        }
+
+        function calcEstimate() {
+            const age = parseFloat(document.getElementById('est-age').value);
+            const heightIn = parseFloat(document.getElementById('est-height').value);
+            const weightVal = parseFloat(document.getElementById('est-weight').value);
+            const activity = parseFloat(document.getElementById('est-activity').value);
+            const deficit = parseFloat(document.getElementById('est-deficit').value);
+            const goal = getGoal();
+            const resultEl = document.getElementById('est-result');
+
+            if (!age || !heightIn || !weightVal || !goal) {
+                resultEl.style.display = 'none';
+                return;
+            }
+
+            // Convert inputs to lbs/inches for calculation
+            const weightLbs = toLbs(weightVal);
+            const heightCm = currentUnit === 'kg' ? heightIn : heightIn * 2.54;
+            const weightKg = weightLbs * LBS_TO_KG;
+            const goalLbs = goal;
+
+            if (weightLbs <= goalLbs) {
+                resultEl.style.display = 'block';
+                document.getElementById('est-date').textContent = 'Already there!';
+                document.getElementById('est-detail').textContent = '';
+                return;
+            }
+
+            // Mifflin-St Jeor BMR
+            let bmr;
+            if (estGender === 'male') {
+                bmr = 10 * weightKg + 6.25 * heightCm - 5 * age + 5;
+            } else {
+                bmr = 10 * weightKg + 6.25 * heightCm - 5 * age - 161;
+            }
+
+            const tdee = bmr * activity;
+            // 1 lb fat = ~3500 calories
+            const lbsPerDay = deficit / 3500;
+            const totalToLose = weightLbs - goalLbs;
+            const daysNeeded = Math.ceil(totalToLose / lbsPerDay);
+
+            const targetDate = new Date();
+            targetDate.setDate(targetDate.getDate() + daysNeeded);
+            const dateStr = targetDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+            const weeks = Math.round(daysNeeded / 7);
+            const lbsPerWeek = (lbsPerDay * 7).toFixed(1);
+
+            resultEl.style.display = 'block';
+            document.getElementById('est-date').textContent = dateStr;
+            document.getElementById('est-detail').textContent =
+                `~${weeks} weeks | ~${toDisplay(parseFloat(lbsPerWeek)).toFixed(1)} ${unitLabel()}/wk | TDEE: ${Math.round(tdee)} cal`;
+
+            // Save inputs
+            localStorage.setItem('estAge', age);
+            localStorage.setItem('estHeight', heightIn);
+            localStorage.setItem('estWeight', weightVal);
+            localStorage.setItem('estActivity', activity);
+            localStorage.setItem('estDeficit', deficit);
+        }
+
+        // Restore estimator inputs
+        function restoreEstimator() {
+            const age = localStorage.getItem('estAge');
+            const height = localStorage.getItem('estHeight');
+            const weight = localStorage.getItem('estWeight');
+            const activity = localStorage.getItem('estActivity');
+            const deficit = localStorage.getItem('estDeficit');
+            if (age) document.getElementById('est-age').value = age;
+            if (height) document.getElementById('est-height').value = height;
+            if (weight) document.getElementById('est-weight').value = weight;
+            if (activity) document.getElementById('est-activity').value = activity;
+            if (deficit) document.getElementById('est-deficit').value = deficit;
+            setGender(estGender);
+        }
+
         // Render all
         function render() {
             const data = getData();
@@ -621,6 +827,7 @@
         });
 
         setUnit(currentUnit);
+        restoreEstimator();
         render();
     </script>
 </body>
