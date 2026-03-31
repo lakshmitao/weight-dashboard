@@ -24,6 +24,7 @@
             max-width: 1200px;
             margin: 0 auto;
             padding: 24px 16px;
+            padding-top: calc(env(safe-area-inset-top, 20px) + 16px);
         }
         h1 {
             font-size: 1.8rem;
@@ -450,7 +451,7 @@
         <!-- Chart + Inputs Row -->
         <div class="main-row">
             <div class="chart-container">
-                <canvas id="weight-chart" height="300"></canvas>
+                <canvas id="weight-chart" height="200"></canvas>
             </div>
             <div class="sidebar">
                 <!-- Input -->
@@ -740,6 +741,8 @@
                             ticks: { color: '#666' }
                         },
                         y: {
+                            min: 150,
+                            max: 220,
                             grid: { color: '#222' },
                             ticks: { color: '#666' }
                         }
