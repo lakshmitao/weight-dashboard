@@ -10,7 +10,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #0f0f0f;
+            background: #1c1c1c;
             color: #e0e0e0;
             min-height: 100vh;
         }
@@ -25,7 +25,7 @@
             margin-bottom: 24px;
             color: #fff;
         }
-        h1 span { color: #6c63ff; }
+        h1 span { color: #e53935; }
 
         /* Stats Cards */
         .stats {
@@ -35,7 +35,7 @@
             margin-bottom: 24px;
         }
         .stat-card {
-            background: #1a1a2e;
+            background: #2a2a2a;
             border-radius: 12px;
             padding: 16px;
             text-align: center;
@@ -57,7 +57,7 @@
 
         /* Input Form */
         .input-section {
-            background: #1a1a2e;
+            background: #2a2a2a;
             border-radius: 12px;
             padding: 20px;
             margin-bottom: 24px;
@@ -74,7 +74,7 @@
             color: #888;
         }
         .field input {
-            background: #16213e;
+            background: #222;
             border: 1px solid #333;
             border-radius: 8px;
             padding: 10px 14px;
@@ -83,9 +83,9 @@
             outline: none;
             width: 160px;
         }
-        .field input:focus { border-color: #6c63ff; }
+        .field input:focus { border-color: #e53935; }
         button {
-            background: #6c63ff;
+            background: #e53935;
             color: #fff;
             border: none;
             border-radius: 8px;
@@ -95,11 +95,11 @@
             cursor: pointer;
             transition: background 0.2s;
         }
-        button:hover { background: #5a52d5; }
+        button:hover { background: #c62828; }
 
         /* Chart */
         .chart-container {
-            background: #1a1a2e;
+            background: #2a2a2a;
             border-radius: 12px;
             padding: 20px;
             margin-bottom: 24px;
@@ -108,7 +108,7 @@
 
         /* Log Table */
         .log-section {
-            background: #1a1a2e;
+            background: #2a2a2a;
             border-radius: 12px;
             padding: 20px;
         }
@@ -132,7 +132,7 @@
         }
         .log-table td {
             padding: 10px 12px;
-            border-bottom: 1px solid #1f1f3a;
+            border-bottom: 1px solid #333;
             font-size: 0.9rem;
         }
         .log-table .change.positive { color: #ff6b6b; }
@@ -157,7 +157,7 @@
 
         /* Goal Section */
         .goal-section {
-            background: #1a1a2e;
+            background: #2a2a2a;
             border-radius: 12px;
             padding: 16px 20px;
             margin-bottom: 24px;
@@ -168,7 +168,7 @@
         }
         .goal-section label { color: #888; font-size: 0.85rem; }
         .goal-section input {
-            background: #16213e;
+            background: #222;
             border: 1px solid #333;
             border-radius: 8px;
             padding: 8px 12px;
@@ -177,7 +177,7 @@
             outline: none;
             width: 100px;
         }
-        .goal-section input:focus { border-color: #6c63ff; }
+        .goal-section input:focus { border-color: #e53935; }
         .goal-section .goal-btn {
             background: #333;
             padding: 8px 16px;
@@ -186,7 +186,7 @@
         .progress-bar-container {
             flex: 1;
             min-width: 200px;
-            background: #16213e;
+            background: #222;
             border-radius: 8px;
             height: 24px;
             overflow: hidden;
@@ -194,7 +194,7 @@
         }
         .progress-bar {
             height: 100%;
-            background: linear-gradient(90deg, #6c63ff, #51cf66);
+            background: linear-gradient(90deg, #e53935, #51cf66);
             border-radius: 8px;
             transition: width 0.5s ease;
         }
@@ -207,11 +207,47 @@
             font-weight: 600;
             color: #fff;
         }
+
+        /* Unit Toggle */
+        .unit-toggle {
+            display: flex;
+            background: #222;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #333;
+        }
+        .unit-toggle button {
+            background: transparent;
+            padding: 6px 16px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 0;
+            color: #888;
+            transition: all 0.2s;
+        }
+        .unit-toggle button:hover { background: #333; }
+        .unit-toggle button.active {
+            background: #e53935;
+            color: #fff;
+        }
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .header-row h1 { margin-bottom: 0; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>My <span>Weight Loss</span> Journey</h1>
+        <div class="header-row">
+            <h1>My <span>Weight Loss</span> Journey</h1>
+            <div class="unit-toggle">
+                <button id="btn-lbs" class="active" onclick="setUnit('lbs')">lbs</button>
+                <button id="btn-kg" onclick="setUnit('kg')">kg</button>
+            </div>
+        </div>
 
         <!-- Stats -->
         <div class="stats">
@@ -251,7 +287,7 @@
                 <input type="date" id="date-input">
             </div>
             <div class="field">
-                <label>Weight (lbs)</label>
+                <label id="weight-label">Weight (lbs)</label>
                 <input type="number" id="weight-input" step="0.1" placeholder="e.g. 185.5">
             </div>
             <button onclick="addEntry()">Log Weight</button>
@@ -270,7 +306,27 @@
     </div>
 
     <script>
-        // Data
+        // Unit
+        let currentUnit = localStorage.getItem('weightUnit') || 'lbs';
+        const LBS_TO_KG = 0.453592;
+        const KG_TO_LBS = 2.20462;
+
+        function setUnit(unit) {
+            currentUnit = unit;
+            localStorage.setItem('weightUnit', unit);
+            document.getElementById('btn-lbs').className = unit === 'lbs' ? 'active' : '';
+            document.getElementById('btn-kg').className = unit === 'kg' ? 'active' : '';
+            document.getElementById('weight-label').textContent = 'Weight (' + unit + ')';
+            document.getElementById('weight-input').placeholder = unit === 'lbs' ? 'e.g. 185.5' : 'e.g. 84.0';
+            document.getElementById('goal-input').placeholder = unit;
+            render();
+        }
+
+        function toDisplay(lbs) { return currentUnit === 'kg' ? lbs * LBS_TO_KG : lbs; }
+        function toLbs(val) { return currentUnit === 'kg' ? val * KG_TO_LBS : val; }
+        function unitLabel() { return currentUnit; }
+
+        // Data (always stored in lbs)
         function getData() {
             return JSON.parse(localStorage.getItem('weightData') || '[]');
         }
@@ -292,13 +348,14 @@
             const weight = parseFloat(weightInput.value);
 
             if (!date || isNaN(weight) || weight <= 0) return;
+            const weightLbs = toLbs(weight);
 
             const data = getData();
             const existing = data.findIndex(d => d.date === date);
             if (existing >= 0) {
-                data[existing].weight = weight;
+                data[existing].weight = weightLbs;
             } else {
-                data.push({ date, weight });
+                data.push({ date, weight: weightLbs });
             }
             data.sort((a, b) => a.date.localeCompare(b.date));
             saveData(data);
@@ -318,7 +375,7 @@
         function setGoal() {
             const val = parseFloat(document.getElementById('goal-input').value);
             if (isNaN(val) || val <= 0) return;
-            localStorage.setItem('weightGoal', val);
+            localStorage.setItem('weightGoal', toLbs(val));
             render();
         }
 
@@ -330,14 +387,14 @@
 
             const chartData = {
                 datasets: [{
-                    label: 'Weight (lbs)',
-                    data: data.map(d => ({ x: d.date, y: d.weight })),
-                    borderColor: '#6c63ff',
-                    backgroundColor: 'rgba(108, 99, 255, 0.1)',
+                    label: 'Weight (' + unitLabel() + ')',
+                    data: data.map(d => ({ x: d.date, y: toDisplay(d.weight) })),
+                    borderColor: '#e53935',
+                    backgroundColor: 'rgba(229, 57, 53, 0.1)',
                     fill: true,
                     tension: 0.3,
                     pointRadius: 4,
-                    pointBackgroundColor: '#6c63ff',
+                    pointBackgroundColor: '#e53935',
                     pointBorderColor: '#fff',
                     pointBorderWidth: 1,
                 }]
@@ -347,8 +404,8 @@
                 chartData.datasets.push({
                     label: 'Goal',
                     data: [
-                        { x: data[0].date, y: goal },
-                        { x: data[data.length - 1].date, y: goal }
+                        { x: data[0].date, y: toDisplay(goal) },
+                        { x: data[data.length - 1].date, y: toDisplay(goal) }
                     ],
                     borderColor: '#51cf66',
                     borderDash: [6, 4],
@@ -379,7 +436,7 @@
                     plugins: {
                         legend: { display: false },
                         tooltip: {
-                            backgroundColor: '#1a1a2e',
+                            backgroundColor: '#2a2a2a',
                             titleColor: '#fff',
                             bodyColor: '#ccc',
                             borderColor: '#333',
@@ -405,8 +462,8 @@
                 return;
             }
 
-            const start = data[0].weight;
-            const current = data[data.length - 1].weight;
+            const start = toDisplay(data[0].weight);
+            const current = toDisplay(data[data.length - 1].weight);
             const lost = current - start;
 
             startEl.textContent = start.toFixed(1);
@@ -417,7 +474,7 @@
 
             // 7-day avg
             const last7 = data.slice(-7);
-            const avg = last7.reduce((s, d) => s + d.weight, 0) / last7.length;
+            const avg = last7.reduce((s, d) => s + toDisplay(d.weight), 0) / last7.length;
             avgEl.textContent = avg.toFixed(1);
         }
 
@@ -427,7 +484,7 @@
             const container = document.getElementById('progress-container');
             const input = document.getElementById('goal-input');
 
-            if (goal) input.value = goal;
+            if (goal) input.value = toDisplay(goal).toFixed(1);
             if (!goal || data.length === 0) {
                 container.style.display = 'none';
                 return;
@@ -457,8 +514,9 @@
 
             reversed.forEach((entry, i) => {
                 const idx = data.length - 1 - i;
-                const prev = idx > 0 ? data[idx - 1].weight : null;
-                const change = prev !== null ? entry.weight - prev : 0;
+                const prev = idx > 0 ? toDisplay(data[idx - 1].weight) : null;
+                const w = toDisplay(entry.weight);
+                const change = prev !== null ? w - prev : 0;
                 const changeStr = prev === null ? '—' : (change > 0 ? '+' : '') + change.toFixed(1);
                 const changeClass = prev === null ? 'neutral' : (change > 0 ? 'positive' : change < 0 ? 'negative' : 'neutral');
 
@@ -467,7 +525,7 @@
 
                 html += `<tr>
                     <td>${dateStr}</td>
-                    <td>${entry.weight.toFixed(1)} lbs</td>
+                    <td>${w.toFixed(1)} ${unitLabel()}</td>
                     <td class="change ${changeClass}">${changeStr}</td>
                     <td><button class="delete-btn" onclick="deleteEntry('${entry.date}')" title="Delete">×</button></td>
                 </tr>`;
@@ -491,6 +549,7 @@
             if (e.key === 'Enter') addEntry();
         });
 
+        setUnit(currentUnit);
         render();
     </script>
 </body>
