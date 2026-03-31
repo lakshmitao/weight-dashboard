@@ -412,6 +412,10 @@
         <!-- Stats -->
         <div class="stats">
             <div class="stat-card">
+                <div class="label">Maintenance</div>
+                <div class="value" id="stat-maintenance">—</div>
+            </div>
+            <div class="stat-card">
                 <div class="label">Starting</div>
                 <div class="value" id="stat-start">—</div>
             </div>
@@ -844,6 +848,7 @@
             // Show TDEE
             tdeeDisplay.style.display = 'block';
             document.getElementById('tdee-value').textContent = Math.round(tdee) + ' cal';
+            document.getElementById('stat-maintenance').textContent = Math.round(tdee) + ' cal';
 
             // Need goal and calorie input for date estimate
             if (!goal || !myCals) {
