@@ -542,10 +542,11 @@
             lostEl.textContent = (lost > 0 ? '+' : '') + lost.toFixed(1) + u;
             lostEl.className = 'value ' + (lost > 0 ? 'positive' : lost < 0 ? 'negative' : '');
 
-            // 7-day avg
-            const last7 = data.slice(-7);
-            const avg = last7.reduce((s, d) => s + toDisplay(d.weight), 0) / last7.length;
-            avgEl.textContent = avg.toFixed(1) + ' ' + unitLabel();
+            // 7-day avg (exclude 0s)
+            const valid = data.filter(d => d.weight > 0);
+            const last7 = valid.slice(-7);
+            const avg = last7.length > 0 ? last7.reduce((s, d) => s + toDisplay(d.weight), 0) / last7.length : 0;
+            avgEl.textContent = avg > 0 ? avg.toFixed(1) + ' ' + unitLabel() : '—';
         }
 
         // Goal progress
