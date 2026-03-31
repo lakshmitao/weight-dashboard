@@ -332,6 +332,71 @@
         }
         .gender-toggle button:hover { background: #333; }
         .gender-toggle button.active { background: #e53935; color: #fff; }
+
+        /* Macros */
+        .macros-section {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        .macros-section h2 {
+            font-size: 0.85rem;
+            color: #aaa;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .macros-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+        @media (max-width: 600px) {
+            .macros-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        .macro-card {
+            background: #222;
+            border-radius: 10px;
+            padding: 14px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .macro-card .macro-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #888;
+            margin-bottom: 6px;
+        }
+        .macro-card .macro-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #fff;
+        }
+        .macro-card .macro-cals {
+            font-size: 0.7rem;
+            color: #666;
+            margin-top: 2px;
+        }
+        .macro-card .macro-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            border-radius: 0 0 10px 10px;
+        }
+        .macro-card.calories .macro-value { color: #e53935; }
+        .macro-card.protein .macro-bar { background: #42a5f5; }
+        .macro-card.carbs .macro-bar { background: #ffa726; }
+        .macro-card.fat .macro-bar { background: #ab47bc; }
+        .macros-empty {
+            color: #555;
+            font-size: 0.85rem;
+            text-align: center;
+            padding: 12px;
+        }
     </style>
 </head>
 <body>
@@ -361,6 +426,14 @@
             <div class="stat-card">
                 <div class="label">7-Day Avg</div>
                 <div class="value" id="stat-avg">—</div>
+            </div>
+        </div>
+
+        <!-- Macros -->
+        <div class="macros-section">
+            <h2>Suggested Daily Macros</h2>
+            <div id="macros-content">
+                <div class="macros-empty">Fill in the Goal Date Estimator to see your macros</div>
             </div>
         </div>
 
@@ -788,6 +861,51 @@
             document.getElementById('est-date').textContent = dateStr;
             document.getElementById('est-detail').textContent =
                 `~${weeks} weeks | ~${toDisplay(parseFloat(lbsPerWeek)).toFixed(1)} ${unitLabel()}/wk | TDEE: ${Math.round(tdee)} cal`;
+
+            // Calculate macros (protein-heavy)
+            const targetCals = Math.round(tdee - deficit);
+            // Protein: 1.2g per lb bodyweight (high protein)
+            const proteinG = Math.round(weightLbs * 1.2);
+            const proteinCals = proteinG * 4;
+            // Fat: 25% of remaining calories
+            const remainingCals = targetCals - proteinCals;
+            const fatCals = Math.round(Math.max(remainingCals * 0.35, weightLbs * 0.3 * 9));
+            const fatG = Math.round(fatCals / 9);
+            // Carbs: whatever's left
+            const carbsCals = Math.max(0, targetCals - proteinCals - fatCals);
+            const carbsG = Math.round(carbsCals / 4);
+
+            const macrosEl = document.getElementById('macros-content');
+            const pPct = Math.round((proteinCals / targetCals) * 100);
+            const cPct = Math.round((carbsCals / targetCals) * 100);
+            const fPct = Math.round((fatCals / targetCals) * 100);
+
+            macrosEl.innerHTML = `
+                <div class="macros-grid">
+                    <div class="macro-card calories">
+                        <div class="macro-label">Calories</div>
+                        <div class="macro-value">${targetCals}</div>
+                        <div class="macro-cals">cal/day</div>
+                    </div>
+                    <div class="macro-card protein">
+                        <div class="macro-label">Protein</div>
+                        <div class="macro-value">${proteinG}g</div>
+                        <div class="macro-cals">${proteinCals} cal (${pPct}%)</div>
+                        <div class="macro-bar" style="width:${pPct}%"></div>
+                    </div>
+                    <div class="macro-card carbs">
+                        <div class="macro-label">Carbs</div>
+                        <div class="macro-value">${carbsG}g</div>
+                        <div class="macro-cals">${carbsCals} cal (${cPct}%)</div>
+                        <div class="macro-bar" style="width:${cPct}%"></div>
+                    </div>
+                    <div class="macro-card fat">
+                        <div class="macro-label">Fat</div>
+                        <div class="macro-value">${fatG}g</div>
+                        <div class="macro-cals">${fatCals} cal (${fPct}%)</div>
+                        <div class="macro-bar" style="width:${fPct}%"></div>
+                    </div>
+                </div>`;
 
             // Save inputs
             localStorage.setItem('estAge', age);
