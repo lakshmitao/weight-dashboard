@@ -458,7 +458,7 @@
                 <canvas id="weight-chart" height="200"></canvas>
             </div>
             <div class="sidebar">
-                <!-- Input -->
+                <!-- Log Weight -->
                 <div class="input-section">
                     <div class="field">
                         <label>Date</label>
@@ -484,28 +484,28 @@
                     </div>
                 </div>
 
-                <!-- Estimator -->
+                <!-- Box 1: My Stats -->
                 <div class="estimator-section">
-                    <h3>Goal Date Estimator</h3>
+                    <h3>My Stats</h3>
                     <div class="gender-toggle">
                         <button id="btn-male" class="active" onclick="setGender('male')">Male</button>
                         <button id="btn-female" onclick="setGender('female')">Female</button>
                     </div>
                     <div class="field">
                         <label>Age</label>
-                        <input type="number" id="est-age" placeholder="e.g. 30" onchange="calcEstimate()">
+                        <input type="number" id="est-age" placeholder="e.g. 30" onchange="calcAll()">
                     </div>
                     <div class="field">
                         <label id="height-label">Height (in)</label>
-                        <input type="number" id="est-height" step="0.1" placeholder="e.g. 70" onchange="calcEstimate()">
+                        <input type="number" id="est-height" step="0.1" placeholder="e.g. 70" onchange="calcAll()">
                     </div>
                     <div class="field">
                         <label id="est-weight-label">Current Weight (lbs)</label>
-                        <input type="number" id="est-weight" step="0.1" placeholder="e.g. 188" onchange="calcEstimate()">
+                        <input type="number" id="est-weight" step="0.1" placeholder="e.g. 188" onchange="calcAll()">
                     </div>
                     <div class="field">
                         <label>Activity Level</label>
-                        <select id="est-activity" onchange="calcEstimate()">
+                        <select id="est-activity" onchange="calcAll()">
                             <option value="1.2">Sedentary (desk job)</option>
                             <option value="1.375">Light (1-3 days/wk)</option>
                             <option value="1.55" selected>Moderate (3-5 days/wk)</option>
@@ -518,24 +518,35 @@
                         <div class="est-date" id="tdee-value">—</div>
                         <div class="est-detail">calories/day to maintain weight</div>
                     </div>
-                    <div class="field">
-                        <label>My Daily Calories</label>
-                        <input type="number" id="est-my-cals" placeholder="e.g. 1800" onchange="calcEstimate()">
-                    </div>
-                    <button onclick="calcEstimate()">Estimate</button>
-                    <div class="estimate-result" id="est-result" style="display:none">
-                        <div class="est-label">Estimated Goal Date</div>
-                        <div class="est-date" id="est-date">—</div>
-                        <div class="est-detail" id="est-detail"></div>
-                    </div>
+                </div>
+
+                <!-- Box 2: Deficit Cals -->
+                <div class="estimator-section">
+                    <h3>Deficit Cals</h3>
+                    <div class="est-detail" style="margin-bottom:8px; color:#888; font-size:0.75rem;">Pick a date and see how many cals/day to hit your goal</div>
                     <div class="field">
                         <label>Goal By Date</label>
-                        <input type="date" id="est-goal-date" onchange="calcEstimate()">
+                        <input type="date" id="est-goal-date" onchange="calcAll()">
                     </div>
                     <div class="estimate-result" id="est-deficit-result" style="display:none">
-                        <div class="est-label">To Hit Goal By Date</div>
+                        <div class="est-label">Eat This Many Cals/Day</div>
                         <div class="est-date" id="est-deficit-cals">—</div>
                         <div class="est-detail" id="est-deficit-detail"></div>
+                    </div>
+                </div>
+
+                <!-- Box 3: Date of Shred -->
+                <div class="estimator-section">
+                    <h3>Date of Shred</h3>
+                    <div class="est-detail" style="margin-bottom:8px; color:#888; font-size:0.75rem;">Enter your daily cals and see when you'll hit goal</div>
+                    <div class="field">
+                        <label>My Daily Calories</label>
+                        <input type="number" id="est-my-cals" placeholder="e.g. 1800" onchange="calcAll()">
+                    </div>
+                    <div class="estimate-result" id="est-result" style="display:none">
+                        <div class="est-label">You'll Hit Goal On</div>
+                        <div class="est-date" id="est-date">—</div>
+                        <div class="est-detail" id="est-detail"></div>
                     </div>
                 </div>
             </div>
@@ -874,29 +885,24 @@
             calcEstimate();
         }
 
-        function calcEstimate() {
+        // Calculate TDEE from stats
+        function calcTDEE() {
             const age = parseFloat(document.getElementById('est-age').value);
             const heightIn = parseFloat(document.getElementById('est-height').value);
             const weightVal = parseFloat(document.getElementById('est-weight').value);
             const activity = parseFloat(document.getElementById('est-activity').value);
-            const myCals = parseFloat(document.getElementById('est-my-cals').value);
-            const goal = getGoal();
-            const resultEl = document.getElementById('est-result');
             const tdeeDisplay = document.getElementById('tdee-display');
 
             if (!age || !heightIn || !weightVal) {
                 tdeeDisplay.style.display = 'none';
-                resultEl.style.display = 'none';
-                return;
+                document.getElementById('stat-maintenance').textContent = '—';
+                return null;
             }
 
-            // Convert inputs to lbs/inches for calculation
             const weightLbs = toLbs(weightVal);
             const heightCm = currentUnit === 'kg' ? heightIn : heightIn * 2.54;
             const weightKg = weightLbs * LBS_TO_KG;
-            const goalLbs = goal;
 
-            // Mifflin-St Jeor BMR
             let bmr;
             if (estGender === 'male') {
                 bmr = 10 * weightKg + 6.25 * heightCm - 5 * age + 5;
@@ -905,71 +911,26 @@
             }
 
             const tdee = bmr * activity;
-
-            // Show TDEE
             tdeeDisplay.style.display = 'block';
             document.getElementById('tdee-value').textContent = Math.round(tdee) + ' cal';
             document.getElementById('stat-maintenance').textContent = Math.round(tdee) + ' cal';
 
-            // Need goal and calorie input for date estimate
-            if (!goal || !myCals) {
-                resultEl.style.display = 'none';
-                // Still calculate macros if we have calories
-                if (myCals) {
-                    renderMacros(myCals, weightLbs);
-                }
-                savEstInputs(age, heightIn, weightVal, activity, myCals);
-                return;
-            }
+            // Save inputs
+            localStorage.setItem('estAge', age);
+            localStorage.setItem('estHeight', heightIn);
+            localStorage.setItem('estWeight', weightVal);
+            localStorage.setItem('estActivity', activity);
 
-            if (weightLbs <= goalLbs) {
-                resultEl.style.display = 'block';
-                document.getElementById('est-date').textContent = 'Already there!';
-                document.getElementById('est-detail').textContent = '';
-                renderMacros(myCals, weightLbs);
-                savEstInputs(age, heightIn, weightVal, activity, myCals);
-                return;
-            }
-
-            const deficit = tdee - myCals;
-            if (deficit <= 0) {
-                resultEl.style.display = 'block';
-                document.getElementById('est-date').textContent = 'Not losing';
-                document.getElementById('est-detail').textContent = 'Your calories are at or above TDEE';
-                renderMacros(myCals, weightLbs);
-                savEstInputs(age, heightIn, weightVal, activity, myCals);
-                return;
-            }
-
-            // 1 lb fat = ~3500 calories
-            const lbsPerDay = deficit / 3500;
-            const totalToLose = weightLbs - goalLbs;
-            const daysNeeded = Math.ceil(totalToLose / lbsPerDay);
-
-            const targetDate = new Date();
-            targetDate.setDate(targetDate.getDate() + daysNeeded);
-            const dateStr = targetDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-
-            const weeks = Math.round(daysNeeded / 7);
-            const lbsPerWeek = (lbsPerDay * 7).toFixed(1);
-
-            resultEl.style.display = 'block';
-            document.getElementById('est-date').textContent = dateStr;
-            document.getElementById('est-detail').textContent =
-                `~${weeks} weeks | ~${toDisplay(parseFloat(lbsPerWeek)).toFixed(1)} ${unitLabel()}/wk | deficit: ${Math.round(deficit)} cal/day`;
-
-            renderMacros(myCals, weightLbs);
-            savEstInputs(age, heightIn, weightVal, activity, myCals);
-
-            // Reverse calc: deficit needed to hit goal by a specific date
-            calcDeficitByDate(tdee, weightLbs, goalLbs);
+            return { tdee, weightLbs };
         }
 
-        function calcDeficitByDate(tdee, weightLbs, goalLbs) {
+        // Box 2: Deficit Cals — pick a date, see daily cals needed
+        function calcDeficitCals(tdee, weightLbs) {
             const goalDateInput = document.getElementById('est-goal-date').value;
             const deficitResult = document.getElementById('est-deficit-result');
+            const goal = getGoal();
 
-            if (!goalDateInput || !goalLbs || weightLbs <= goalLbs) {
+            if (!goalDateInput || !goal || !tdee || weightLbs <= goal) {
                 deficitResult.style.display = 'none';
                 return;
             }
@@ -977,11 +938,12 @@
             const today = new Date();
             const goalDate = new Date(goalDateInput + 'T00:00:00');
             const daysLeft = Math.max(1, Math.ceil((goalDate - today) / 86400000));
-            const totalToLose = weightLbs - goalLbs;
+            const totalToLose = weightLbs - goal;
             const lbsPerDay = totalToLose / daysLeft;
             const deficitNeeded = Math.round(lbsPerDay * 3500);
             const targetCals = Math.round(tdee - deficitNeeded);
             const lbsPerWeek = (lbsPerDay * 7).toFixed(1);
+            const weeks = Math.round(daysLeft / 7);
 
             deficitResult.style.display = 'block';
 
@@ -991,19 +953,75 @@
                 return;
             }
 
-            if (deficitNeeded > 1500) {
-                document.getElementById('est-deficit-cals').textContent = `${targetCals} cal/day`;
-                document.getElementById('est-deficit-detail').textContent =
-                    `${deficitNeeded} cal/day deficit | ${toDisplay(parseFloat(lbsPerWeek)).toFixed(1)} ${unitLabel()}/wk — WARNING: too aggressive`;
-                return;
-            }
+            let warning = '';
+            if (deficitNeeded > 1500) warning = ' — too aggressive!';
 
             document.getElementById('est-deficit-cals').textContent = `${targetCals} cal/day`;
             document.getElementById('est-deficit-detail').textContent =
-                `${deficitNeeded} cal/day deficit | ~${toDisplay(parseFloat(lbsPerWeek)).toFixed(1)} ${unitLabel()}/wk`;
+                `${deficitNeeded} cal deficit | ~${toDisplay(parseFloat(lbsPerWeek)).toFixed(1)} ${unitLabel()}/wk | ${weeks} wks${warning}`;
 
             localStorage.setItem('estGoalDate', goalDateInput);
         }
+
+        // Box 3: Date of Shred — enter daily cals, see the date
+        function calcDateOfShred(tdee, weightLbs) {
+            const myCals = parseFloat(document.getElementById('est-my-cals').value);
+            const resultEl = document.getElementById('est-result');
+            const goal = getGoal();
+
+            if (!myCals || !goal || !tdee) {
+                resultEl.style.display = 'none';
+                if (myCals) renderMacros(myCals, weightLbs);
+                return;
+            }
+
+            if (myCals) localStorage.setItem('estMyCals', myCals);
+
+            if (weightLbs <= goal) {
+                resultEl.style.display = 'block';
+                document.getElementById('est-date').textContent = 'Already there!';
+                document.getElementById('est-detail').textContent = '';
+                renderMacros(myCals, weightLbs);
+                return;
+            }
+
+            const deficit = tdee - myCals;
+            if (deficit <= 0) {
+                resultEl.style.display = 'block';
+                document.getElementById('est-date').textContent = 'Not losing';
+                document.getElementById('est-detail').textContent = 'Cals at or above TDEE';
+                renderMacros(myCals, weightLbs);
+                return;
+            }
+
+            const lbsPerDay = deficit / 3500;
+            const totalToLose = weightLbs - goal;
+            const daysNeeded = Math.ceil(totalToLose / lbsPerDay);
+
+            const targetDate = new Date();
+            targetDate.setDate(targetDate.getDate() + daysNeeded);
+            const dateStr = targetDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            const weeks = Math.round(daysNeeded / 7);
+            const lbsPerWeek = (lbsPerDay * 7).toFixed(1);
+
+            resultEl.style.display = 'block';
+            document.getElementById('est-date').textContent = dateStr;
+            document.getElementById('est-detail').textContent =
+                `~${weeks} wks | ~${toDisplay(parseFloat(lbsPerWeek)).toFixed(1)} ${unitLabel()}/wk | ${Math.round(deficit)} cal deficit`;
+
+            renderMacros(myCals, weightLbs);
+        }
+
+        // Master calc — runs all three boxes
+        function calcAll() {
+            const stats = calcTDEE();
+            if (!stats) return;
+            calcDeficitCals(stats.tdee, stats.weightLbs);
+            calcDateOfShred(stats.tdee, stats.weightLbs);
+        }
+
+        // Backward compat
+        function calcEstimate() { calcAll(); }
 
         function savEstInputs(age, height, weight, activity, cals) {
             localStorage.setItem('estAge', age);
