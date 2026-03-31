@@ -75,6 +75,8 @@
         .sidebar {
             width: 280px;
             flex-shrink: 0;
+            min-width: 0;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             gap: 16px;
@@ -93,7 +95,7 @@
             flex-direction: column;
             gap: 12px;
         }
-        .input-section .field input { width: 100%; }
+        .input-section .field input { width: 100%; max-width: 100%; box-sizing: border-box; }
         .field { display: flex; flex-direction: column; gap: 4px; }
         .field label {
             font-size: 0.75rem;
