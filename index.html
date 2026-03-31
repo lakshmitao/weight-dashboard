@@ -326,6 +326,13 @@
         function toLbs(val) { return currentUnit === 'kg' ? val * KG_TO_LBS : val; }
         function unitLabel() { return currentUnit; }
 
+        // Seed data from weight_cut_log.xls
+        const SEED_DATA = [{"date":"2026-01-12","weight":196.0},{"date":"2026-01-13","weight":195.0},{"date":"2026-01-14","weight":194.9},{"date":"2026-01-15","weight":194.0},{"date":"2026-01-16","weight":193.3},{"date":"2026-01-17","weight":191.8},{"date":"2026-01-18","weight":195.7},{"date":"2026-01-19","weight":193.8},{"date":"2026-01-20","weight":194.9},{"date":"2026-01-21","weight":194.2},{"date":"2026-01-22","weight":194.0},{"date":"2026-01-23","weight":193.4},{"date":"2026-01-24","weight":192.5},{"date":"2026-01-25","weight":192.0},{"date":"2026-01-26","weight":191.2},{"date":"2026-01-27","weight":190.5},{"date":"2026-01-28","weight":192.2},{"date":"2026-01-29","weight":191.1},{"date":"2026-01-30","weight":190.4},{"date":"2026-01-31","weight":190.9},{"date":"2026-02-10","weight":192.6},{"date":"2026-02-11","weight":192.6},{"date":"2026-02-12","weight":192.1},{"date":"2026-02-13","weight":191.8},{"date":"2026-02-14","weight":190.0},{"date":"2026-02-20","weight":190.9},{"date":"2026-02-21","weight":192.3},{"date":"2026-02-22","weight":192.1},{"date":"2026-02-23","weight":188.6},{"date":"2026-02-24","weight":190.9},{"date":"2026-02-25","weight":188.9},{"date":"2026-02-28","weight":188.9},{"date":"2026-03-01","weight":188.9},{"date":"2026-03-02","weight":190.0},{"date":"2026-03-03","weight":189.1},{"date":"2026-03-04","weight":188.8},{"date":"2026-03-05","weight":187.5},{"date":"2026-03-06","weight":186.7},{"date":"2026-03-07","weight":190.0},{"date":"2026-03-08","weight":188.3},{"date":"2026-03-09","weight":186.6},{"date":"2026-03-10","weight":186.2},{"date":"2026-03-11","weight":186.2},{"date":"2026-03-16","weight":187.1},{"date":"2026-03-17","weight":187.3},{"date":"2026-03-18","weight":187.8},{"date":"2026-03-19","weight":188.3},{"date":"2026-03-20","weight":186.5},{"date":"2026-03-21","weight":188.0},{"date":"2026-03-29","weight":186.0},{"date":"2026-03-30","weight":188.0}];
+
+        if (!localStorage.getItem('weightData')) {
+            localStorage.setItem('weightData', JSON.stringify(SEED_DATA));
+        }
+
         // Data (always stored in lbs)
         function getData() {
             return JSON.parse(localStorage.getItem('weightData') || '[]');
