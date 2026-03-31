@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fatlo-v1';
+const CACHE_NAME = 'fatlo-v2';
 const ASSETS = [
   '/weight-dashboard/',
   '/weight-dashboard/index.html',
