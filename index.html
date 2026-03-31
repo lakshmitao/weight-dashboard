@@ -498,14 +498,14 @@
                             <option value="1.9">Very Active (2x/day)</option>
                         </select>
                     </div>
+                    <div class="estimate-result" id="tdee-display" style="display:none">
+                        <div class="est-label">Your TDEE</div>
+                        <div class="est-date" id="tdee-value">—</div>
+                        <div class="est-detail">calories/day to maintain weight</div>
+                    </div>
                     <div class="field">
-                        <label>Deficit (cal/day)</label>
-                        <select id="est-deficit" onchange="calcEstimate()">
-                            <option value="250">Slow (250 cal)</option>
-                            <option value="500" selected>Moderate (500 cal)</option>
-                            <option value="750">Aggressive (750 cal)</option>
-                            <option value="1000">Very Aggressive (1000 cal)</option>
-                        </select>
+                        <label>My Daily Calories</label>
+                        <input type="number" id="est-my-cals" placeholder="e.g. 1800" onchange="calcEstimate()">
                     </div>
                     <button onclick="calcEstimate()">Estimate</button>
                     <div class="estimate-result" id="est-result" style="display:none">
@@ -814,11 +814,13 @@
             const heightIn = parseFloat(document.getElementById('est-height').value);
             const weightVal = parseFloat(document.getElementById('est-weight').value);
             const activity = parseFloat(document.getElementById('est-activity').value);
-            const deficit = parseFloat(document.getElementById('est-deficit').value);
+            const myCals = parseFloat(document.getElementById('est-my-cals').value);
             const goal = getGoal();
             const resultEl = document.getElementById('est-result');
+            const tdeeDisplay = document.getElementById('tdee-display');
 
-            if (!age || !heightIn || !weightVal || !goal) {
+            if (!age || !heightIn || !weightVal) {
+                tdeeDisplay.style.display = 'none';
                 resultEl.style.display = 'none';
                 return;
             }
@@ -829,13 +831,6 @@
             const weightKg = weightLbs * LBS_TO_KG;
             const goalLbs = goal;
 
-            if (weightLbs <= goalLbs) {
-                resultEl.style.display = 'block';
-                document.getElementById('est-date').textContent = 'Already there!';
-                document.getElementById('est-detail').textContent = '';
-                return;
-            }
-
             // Mifflin-St Jeor BMR
             let bmr;
             if (estGender === 'male') {
@@ -845,6 +840,41 @@
             }
 
             const tdee = bmr * activity;
+
+            // Show TDEE
+            tdeeDisplay.style.display = 'block';
+            document.getElementById('tdee-value').textContent = Math.round(tdee) + ' cal';
+
+            // Need goal and calorie input for date estimate
+            if (!goal || !myCals) {
+                resultEl.style.display = 'none';
+                // Still calculate macros if we have calories
+                if (myCals) {
+                    renderMacros(myCals, weightLbs);
+                }
+                savEstInputs(age, heightIn, weightVal, activity, myCals);
+                return;
+            }
+
+            if (weightLbs <= goalLbs) {
+                resultEl.style.display = 'block';
+                document.getElementById('est-date').textContent = 'Already there!';
+                document.getElementById('est-detail').textContent = '';
+                renderMacros(myCals, weightLbs);
+                savEstInputs(age, heightIn, weightVal, activity, myCals);
+                return;
+            }
+
+            const deficit = tdee - myCals;
+            if (deficit <= 0) {
+                resultEl.style.display = 'block';
+                document.getElementById('est-date').textContent = 'Not losing';
+                document.getElementById('est-detail').textContent = 'Your calories are at or above TDEE';
+                renderMacros(myCals, weightLbs);
+                savEstInputs(age, heightIn, weightVal, activity, myCals);
+                return;
+            }
+
             // 1 lb fat = ~3500 calories
             const lbsPerDay = deficit / 3500;
             const totalToLose = weightLbs - goalLbs;
@@ -860,10 +890,22 @@
             resultEl.style.display = 'block';
             document.getElementById('est-date').textContent = dateStr;
             document.getElementById('est-detail').textContent =
-                `~${weeks} weeks | ~${toDisplay(parseFloat(lbsPerWeek)).toFixed(1)} ${unitLabel()}/wk | TDEE: ${Math.round(tdee)} cal`;
+                `~${weeks} weeks | ~${toDisplay(parseFloat(lbsPerWeek)).toFixed(1)} ${unitLabel()}/wk | deficit: ${Math.round(deficit)} cal/day`;
 
-            // Calculate macros (protein-heavy)
-            const targetCals = Math.round(tdee - deficit);
+            renderMacros(myCals, weightLbs);
+            savEstInputs(age, heightIn, weightVal, activity, myCals);
+        }
+
+        function savEstInputs(age, height, weight, activity, cals) {
+            localStorage.setItem('estAge', age);
+            localStorage.setItem('estHeight', height);
+            localStorage.setItem('estWeight', weight);
+            localStorage.setItem('estActivity', activity);
+            if (cals) localStorage.setItem('estMyCals', cals);
+        }
+
+        function renderMacros(targetCals, weightLbs) {
+            targetCals = Math.round(targetCals);
             // Protein: 1.2g per lb bodyweight (high protein)
             const proteinG = Math.round(weightLbs * 1.2);
             const proteinCals = proteinG * 4;
@@ -906,13 +948,6 @@
                         <div class="macro-bar" style="width:${fPct}%"></div>
                     </div>
                 </div>`;
-
-            // Save inputs
-            localStorage.setItem('estAge', age);
-            localStorage.setItem('estHeight', heightIn);
-            localStorage.setItem('estWeight', weightVal);
-            localStorage.setItem('estActivity', activity);
-            localStorage.setItem('estDeficit', deficit);
         }
 
         // Restore estimator inputs
@@ -921,12 +956,12 @@
             const height = localStorage.getItem('estHeight');
             const weight = localStorage.getItem('estWeight');
             const activity = localStorage.getItem('estActivity');
-            const deficit = localStorage.getItem('estDeficit');
+            const myCals = localStorage.getItem('estMyCals');
             if (age) document.getElementById('est-age').value = age;
             if (height) document.getElementById('est-height').value = height;
             if (weight) document.getElementById('est-weight').value = weight;
             if (activity) document.getElementById('est-activity').value = activity;
-            if (deficit) document.getElementById('est-deficit').value = deficit;
+            if (myCals) document.getElementById('est-my-cals').value = myCals;
             setGender(estGender);
         }
 
