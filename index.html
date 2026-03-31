@@ -151,17 +151,19 @@
         }
         .log-table th {
             text-align: left;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
             color: #666;
-            padding: 8px 12px;
+            padding: 6px 6px;
             border-bottom: 1px solid #333;
+            white-space: nowrap;
         }
         .log-table td {
-            padding: 10px 12px;
+            padding: 8px 6px;
             border-bottom: 1px solid #333;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
+            white-space: nowrap;
         }
         .log-table .change.positive { color: #ff6b6b; }
         .log-table .change.negative { color: #51cf66; }
@@ -837,7 +839,7 @@
                 const changeClass = prev === null ? 'neutral' : (change > 0 ? 'positive' : change < 0 ? 'negative' : 'neutral');
 
                 const dateObj = new Date(entry.date + 'T00:00:00');
-                const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
                 html += `<tr>
                     <td>${dateStr}</td>
