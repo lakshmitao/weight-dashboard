@@ -414,9 +414,12 @@
     <div class="container">
         <div class="header-row">
             <h1>SLK's <span>Fat Loss</span> Journey</h1>
-            <div class="unit-toggle">
-                <button id="btn-lbs" class="active" onclick="setUnit('lbs')">lbs</button>
-                <button id="btn-kg" onclick="setUnit('kg')">kg</button>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <button onclick="location.reload()" style="background: #2a2a2a; border: none; color: #fff; font-size: 1.2rem; padding: 6px 10px; border-radius: 8px; cursor: pointer;">&#x21bb;</button>
+                <div class="unit-toggle">
+                    <button id="btn-lbs" class="active" onclick="setUnit('lbs')">lbs</button>
+                    <button id="btn-kg" onclick="setUnit('kg')">kg</button>
+                </div>
             </div>
         </div>
 
