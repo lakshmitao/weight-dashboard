@@ -457,6 +457,14 @@
                 <div class="label">7-Day Avg</div>
                 <div class="value" id="stat-avg">—</div>
             </div>
+            <div class="stat-card">
+                <div class="label">Avg/Day</div>
+                <div class="value" id="stat-avg-day">—</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Avg/Week</div>
+                <div class="value" id="stat-avg-week">—</div>
+            </div>
         </div>
 
         <!-- Macros -->
@@ -810,6 +818,9 @@
             const weeksEl = document.getElementById('stat-weeks');
             const monthsEl = document.getElementById('stat-months');
 
+            const avgDayEl = document.getElementById('stat-avg-day');
+            const avgWeekEl = document.getElementById('stat-avg-week');
+
             if (data.length === 0) {
                 startEl.textContent = '—';
                 currentEl.textContent = '—';
@@ -818,6 +829,8 @@
                 daysEl.textContent = '—';
                 weeksEl.textContent = '—';
                 monthsEl.textContent = '—';
+                avgDayEl.textContent = '—';
+                avgWeekEl.textContent = '—';
                 return;
             }
 
@@ -844,6 +857,19 @@
 
             lostEl.textContent = (lost > 0 ? '+' : '') + lost.toFixed(1) + u;
             lostEl.className = 'value ' + (lost > 0 ? 'positive' : lost < 0 ? 'negative' : '');
+
+            // Avg loss per day and per week
+            if (totalDays > 1) {
+                const avgPerDay = lost / totalDays;
+                const avgPerWeek = avgPerDay * 7;
+                avgDayEl.textContent = (avgPerDay > 0 ? '+' : '') + avgPerDay.toFixed(2) + u;
+                avgDayEl.className = 'value ' + (avgPerDay > 0 ? 'positive' : avgPerDay < 0 ? 'negative' : '');
+                avgWeekEl.textContent = (avgPerWeek > 0 ? '+' : '') + avgPerWeek.toFixed(1) + u;
+                avgWeekEl.className = 'value ' + (avgPerWeek > 0 ? 'positive' : avgPerWeek < 0 ? 'negative' : '');
+            } else {
+                avgDayEl.textContent = '—';
+                avgWeekEl.textContent = '—';
+            }
 
             // 7-day avg (exclude 0s)
             const valid = data.filter(d => d.weight > 0);
